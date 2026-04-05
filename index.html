@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="logo.PNG">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Tirth Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-light: #fdfcf0;
+            --bg-dark: #121212;
+            --card-light: #ffffff;
+            --card-dark: #1e1e1e;
+            --accent: #d4af37;
+            --accent-hover: #b8962d;
+            --text-main: #1a1a1a;
+            --text-muted: #666;
+            --border: rgba(0, 0, 0, 0.08);
+            --dock-bg: rgba(255, 255, 255, 0.85);
+            --radius-lg: 2rem;
+            --shadow-lg: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        body.dark {
+            --bg-light: #121212;
+            --text-main: #fdfcf0;
+            --text-muted: #d1d1d1;
+            --card-light: #1e1e1e;
+            --border: rgba(255, 255, 255, 0.15);
+            --dock-bg: rgba(30, 30, 30, 0.9);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+
+        body { background: var(--bg-light); color: var(--text-main); transition: background 0.4s ease, color 0.4s ease; padding-bottom: 120px; min-height: 100vh; }
+
+        /* Bento Header */
+        .bento-container { max-width: 1400px; margin: 2rem auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; padding: 0 1.5rem; }
+        .bento-item { background: var(--card-light); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; transition: 0.3s; }
+        
+        .hero-card { grid-column: span 2; grid-row: span 2; background: var(--accent); color: #fff !important; position: relative; overflow: hidden; }
+        .hero-card h1, .hero-card p { color: white !important; }
+        .hero-card::after { content: "🪷"; position: absolute; bottom: -20px; right: -10px; font-size: 8rem; opacity: 0.15; }
+
+        .stat-val { font-size: 3.5rem; font-weight: 800; color: var(--accent); line-height: 1; }
+        .stat-lbl { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-top: 5px; }
+
+        /* Tirth Grid */
+        .content-section { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; }
+        .empty-state { text-align: center; padding: 5rem 1rem; opacity: 0.5; font-style: italic; grid-column: 1 / -1; }
+        .tirth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem; }
+
+        /* Card Design */
+        .tirth-card {
+            background: var(--card-light);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            position: relative;
+            transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .tirth-card:hover { transform: translateY(-8px); border-color: var(--accent); box-shadow: var(--shadow-lg); }
+
+        .card-media { height: 210px; position: relative; background: #eee; overflow: hidden; }
+        .card-media img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+        .tirth-card:hover .card-media img { filter: blur(3px) brightness(0.6); }
+
+        .history-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.75);
+            color: white; opacity: 0; display: flex; flex-direction: column;
+            padding: 1.5rem; justify-content: center; transition: 0.3s;
+            pointer-events: none; text-align: center; z-index: 10;
+        }
+        .tirth-card:hover .history-overlay { opacity: 1; pointer-events: all; }
+        .history-list { font-size: 0.85rem; max-height: 110px; overflow-y: auto; margin-top: 10px; padding-right: 5px; }
+        .history-item { padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        .placeholder-box { height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #eaddca, #d4af37); color: white; font-size: 3.5rem; font-weight: 800; }
+
+        .badge-visited { position: absolute; top: 1.2rem; left: 1.2rem; background: var(--accent); color: white; padding: 5px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; z-index: 5; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+        .card-body { padding: 1.5rem; }
+        .card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 5px; }
+        .card-loc { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.2rem; display: flex; align-items: center; gap: 5px; }
+
+        .btn-group { display: flex; gap: 8px; }
+        .btn-main { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 14px; font-weight: 600; cursor: pointer; flex: 1; transition: 0.2s; }
+        .btn-main:hover { background: var(--accent-hover); transform: scale(1.02); }
+        .btn-icon { background: var(--card-light); border: 1px solid var(--border); padding: 12px; border-radius: 14px; cursor: pointer; color: var(--text-main); font-size: 1rem; transition: 0.2s; }
+        .btn-icon:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        /* Floating Dock */
+        .action-dock {
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            background: var(--dock-bg); backdrop-filter: blur(18px);
+            padding: 12px 24px; border-radius: 50px; display: flex; align-items: center; gap: 18px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); border: 1px solid var(--border); z-index: 1000;
+        }
+        .filter-select { background: none; border: none; font-weight: 700; color: var(--text-main); outline: none; cursor: pointer; font-size: 0.95rem; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 2000; align-items: center; justify-content: center; }
+        .modal-card { background: var(--card-light); width: 92%; max-width: 480px; padding: 2.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border); position: relative; }
+        .modal-card h2 { font-family: 'Playfair Display', serif; margin-bottom: 1.5rem; }
+        .modal-card input { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-light); color: var(--text-main); margin-bottom: 15px; font-size: 1rem; }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <header class="bento-container">
+        <div class="bento-item hero-card">
+            <h1 style="font-family:'Playfair Display'; font-size: 2.8rem;">Shah Family's Yatra</h1>
+            <br>
+            <p><h2 style="word-spacing: 25px;">"The Yatra Log."</h2></p>
+        </div>
+        <div class="bento-item">
+            <div class="stat-val" id="totalTirths">0</div>
+            <div class="stat-lbl">Total Tirth</div>
+        </div>
+        <div class="bento-item">
+            <div class="stat-val" id="uniqueVisited">0</div>
+            <div class="stat-lbl">Visited</div>
+        </div>
+        <div class="bento-item">
+            <button onclick="document.body.classList.toggle('dark')" class="btn-main" style="height:100%; width:100%; border-radius:1.8rem; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;">
+                <span style="font-size:1.5rem;">🌓</span>
+                <span style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px;">Toggle Theme</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="content-section">
+        <div id="tirthGridContainer" class="tirth-grid"></div>
+    </main>
+
+    <nav class="action-dock">
+        <button class="btn-main" style="padding: 12px 28px; border-radius: 30px;" onclick="openAddModal()">+ Add New Tirth</button>
+        <div style="width:1px; height:25px; background:var(--border);"></div>
+        <select id="statusFilter" class="filter-select">
+            <option value="all">View All</option>
+            <option value="visited">Visited Only</option>
+            <option value="notvisited">Not Visited</option>
+        </select>
+    </nav>
+
+    <div id="tirthModal" class="modal">
+        <div class="modal-card">
+            <h2 id="modalTitle">New Destination</h2>
+            <input type="text" id="mName" placeholder="Tirth Name">
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="mCity" placeholder="City">
+                <input type="text" id="mState" placeholder="State">
+            </div>
+            <input type="url" id="mMap" placeholder="Google Maps URL">
+            <label style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px; display:block;">Upload Image</label>
+            <input type="file" id="mFile" accept="image/*">
+            <button class="btn-main" id="mSave" style="width:100%; margin-top:10px; padding:15px;">Save Destination</button>
+            <button onclick="closeModal()" style="background:none; border:none; width:100%; margin-top:15px; cursor:pointer; color:var(--text-muted); font-weight:600;">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // Start with a completely clean slate
+        let visits = JSON.parse(localStorage.getItem("jainV_v3") || "{}");
+        let tirths = JSON.parse(localStorage.getItem("jainU_v3") || "[]");
+        let currentFilter = "all";
+        let editingId = null;
+
+        function saveToLocal() {
+            localStorage.setItem("jainV_v3", JSON.stringify(visits));
+            localStorage.setItem("jainU_v3", JSON.stringify(tirths));
+        }
+
+        function render() {
+            const container = document.getElementById("tirthGridContainer");
+            
+            let filtered = tirths.filter(t => {
+                const isV = visits[t.id]?.length > 0;
+                if(currentFilter === "visited") return isV;
+                if(currentFilter === "notvisited") return !isV;
+                return true;
+            });
+
+            document.getElementById("totalTirths").innerText = tirths.length;
+            document.getElementById("uniqueVisited").innerText = Object.keys(visits).filter(k => visits[k].length > 0).length;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="empty-state">No tirths found. Add your first destination to begin. 🪷</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(t => {
+                const vDates = visits[t.id] || [];
+                const isV = vDates.length > 0;
+                const initials = t.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+                return `
+                <div class="tirth-card">
+                    ${isV ? '<div class="badge-visited">✅ VISITED</div>' : ''}
+                    <div class="card-media">
+                        ${t.img ? `<img src="${t.img}">` : `<div class="placeholder-box">${initials}</div>`}
+                        <div class="history-overlay">
+                            <strong style="font-size:1.1rem; border-bottom:1px solid var(--accent); padding-bottom:5px;">Entry Timeline</strong>
+                            <div class="history-list">
+                                ${vDates.length ? vDates.map(d => `<div class="history-item">${d}</div>`).join('') : 'No visits marked yet.'}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">${t.name}</h3>
+                        <p class="card-loc">📍 ${t.city}, ${t.state}</p>
+                        <div class="btn-group">
+                            <button class="btn-main" onclick="markVisit('${t.id}')">${isV ? 'Visit Again' : 'Mark Visited'}</button>
+                            ${t.map ? `<button class="btn-icon" onclick="window.open('${t.map}')" title="Maps">🗺️</button>` : ''}
+                            <button class="btn-icon" onclick="editTirth('${t.id}')">✏️</button>
+                            <button class="btn-icon" onclick="deleteTirth('${t.id}')">🗑️</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function markVisit(id) {
+            const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            if(!visits[id]) visits[id] = [];
+            visits[id].push(dateStr);
+            saveToLocal(); render();
+        }
+
+        function deleteTirth(id) {
+            if(!confirm("Remove this tirth permanently?")) return;
+            tirths = tirths.filter(t => t.id !== id);
+            delete visits[id];
+            saveToLocal(); render();
+        }
+
+        function openAddModal() {
+            editingId = null;
+            document.getElementById("modalTitle").innerText = "New Destination";
+            clearModal();
+            document.getElementById("tirthModal").style.display = "flex";
+        }
+
+        function editTirth(id) {
+            const t = tirths.find(x => x.id === id);
+            if(!t) return;
+            editingId = id;
+            document.getElementById("modalTitle").innerText = "Edit Details";
+            document.getElementById("mName").value = t.name;
+            document.getElementById("mCity").value = t.city;
+            document.getElementById("mState").value = t.state;
+            document.getElementById("mMap").value = t.map || "";
+            document.getElementById("tirthModal").style.display = "flex";
+        }
+
+        document.getElementById("mSave").onclick = function() {
+            const name = document.getElementById("mName").value.trim();
+            const city = document.getElementById("mCity").value.trim();
+            const state = document.getElementById("mState").value.trim();
+            const map = document.getElementById("mMap").value.trim();
+            const file = document.getElementById("mFile").files[0];
+
+            if(!name || !city) return alert("Required: Name and City.");
+
+            const finalize = (imgData = "") => {
+                if(editingId) {
+                    const idx = tirths.findIndex(u => u.id === editingId);
+                    tirths[idx] = { ...tirths[idx], name, city, state, map, img: imgData || tirths[idx].img };
+                } else {
+                    tirths.push({ id: "t_"+Date.now(), name, city, state, map, img: imgData });
+                }
+                saveToLocal(); closeModal(); render();
+            };
+
+            if(file) {
+                const r = new FileReader();
+                r.onload = e => finalize(e.target.result);
+                r.readAsDataURL(file);
+            } else finalize();
+        };
+
+        function closeModal() { document.getElementById("tirthModal").style.display = "none"; }
+        function clearModal() { ["mName", "mCity", "mState", "mMap", "mFile"].forEach(i => document.getElementById(i).value = ""); }
+
+        document.getElementById("statusFilter").onchange = (e) => { currentFilter = e.target.value; render(); };
+        window.onclick = (e) => { if(e.target == document.getElementById("tirthModal")) closeModal(); }
+
+        render();
+    </script>
+</body>
+</html>
